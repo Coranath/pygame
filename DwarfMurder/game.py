@@ -6,7 +6,7 @@ from pygame.locals import QUIT, K_LEFT, K_RIGHT, K_UP, K_ESCAPE, KEYDOWN
 
 class Dwarf(pg.sprite.Sprite):
 
-    def __init__(self, pos) -> None:
+    def __init__(self, pos, speed) -> None:
         super(Dwarf, self).__init__()
 
         self.dir = 'LEFT'
@@ -22,6 +22,7 @@ class Dwarf(pg.sprite.Sprite):
         self.animate()
 
         self.rect = self.surf.get_rect(center=(pos[0], pos[1]))
+        self.speed = speed
 
     def animate(self):
 
@@ -37,11 +38,11 @@ class Dwarf(pg.sprite.Sprite):
 
         if self.dir == 'LEFT':
 
-            self.rect.move_ip(-5, 0)
+            self.rect.move_ip(-self.speed, 0)
 
         if self.dir == 'RIGHT':
 
-            self.rect.move_ip(5, 0)
+            self.rect.move_ip(self.speed, 0)
 
     def changeDir(self):
 
@@ -198,11 +199,17 @@ running = True
 
 score = 0
 
+enemySpeed = 3
+
 def game():
 
     gameLoop = True
 
     global score
+
+    global enemySpeed
+
+    print(enemySpeed)
 
     global running
     global bullet_sound
@@ -211,7 +218,7 @@ def game():
 
     for i in range(10):
 
-        new_dwarf = Dwarf((800+(i*32), 64))
+        new_dwarf = Dwarf((800+(i*32), 64), enemySpeed)
 
         animatable_sprites.add(new_dwarf)
         all_sprites.add(new_dwarf)
@@ -289,6 +296,11 @@ def game():
 
                 dwarf.kill()
 
+            for dwarf in dwarves:
+                if dwarf.rect.bottom > 800:
+                    gameLoop = False
+                    running = False
+
         pressed_keys = pg.key.get_pressed()
 
         player.update(pressed_keys)
@@ -311,11 +323,31 @@ def game():
 
         if len(dwarves) == 0:
             gameLoop = False
+            enemySpeed += 1
+            for obstacle in obstacles:
+                obstacle.kill()
+
 
         clock.tick(30)
 
 while running:
 
     game()
+
+screen.blit(pg.font.Font.render(pg.font.SysFont('calibri', 50), f'GAME OVER', False, (255,255,255)), (300,300))
+screen.blit(pg.font.Font.render(pg.font.SysFont('calibri', 36), f'{score}', False, (255,255,255)), (400,350))
+screen.blit(pg.font.Font.render(pg.font.SysFont('calibri', 36), f'Press enter to quit', False, (255,255,255)), (300,0))
+
+pg.display.flip()
+
+endScreen = True
+
+while endScreen:
+
+    for event in pg.event.get():
+
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                endScreen = False
 
 pg.quit()
